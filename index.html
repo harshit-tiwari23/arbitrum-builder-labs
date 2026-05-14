@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArbiLearn — Web3 & Arbitrum Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #060A10;
+      --bg2: #0D1420;
+      --bg3: #111C2E;
+      --border: rgba(0,200,255,0.15);
+      --cyan: #00C8FF;
+      --cyan-dim: rgba(0,200,255,0.12);
+      --orange: #FF6B2B;
+      --orange-dim: rgba(255,107,43,0.12);
+      --green: #00FF94;
+      --red: #FF3B5C;
+      --text: #E8F4FF;
+      --text-muted: #7A9BBD;
+      --font-display: 'Syne', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+      --nav-h: 64px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-display);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--nav-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+      background: rgba(6,10,16,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      color: var(--cyan);
+      letter-spacing: 2px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-logo span { color: var(--orange); }
+
+    .nav-links {
+      display: flex; gap: 8px;
+    }
+
+    .nav-link {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: none;
+    }
+    .nav-link:hover { color: var(--cyan); border-color: var(--border); }
+    .nav-link.active {
+      color: var(--cyan);
+      background: var(--cyan-dim);
+      border-color: rgba(0,200,255,0.3);
+    }
+
+    /* ── PAGE CONTAINER ── */
+    .page { display: none; padding-top: var(--nav-h); min-height: 100vh; }
+    .page.active { display: block; animation: fadeIn 0.4s ease; }
+
+    @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+    /* ── SHARED UTILITIES ── */
+    .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 80px 0; }
+    .tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      background: var(--cyan-dim);
+      border: 1px solid rgba(0,200,255,0.25);
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.7;
+      max-width: 560px;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .card:hover { border-color: rgba(0,200,255,0.35); transform: translateY(-2px); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 12px 24px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--cyan);
+      color: #000;
+      font-weight: 700;
+    }
+    .btn-primary:hover { background: #33D4FF; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,200,255,0.3); }
+    .btn-outline {
+      background: transparent;
+      color: var(--cyan);
+      border: 1px solid rgba(0,200,255,0.4);
+    }
+    .btn-outline:hover { background: var(--cyan-dim); }
+    .btn-orange {
+      background: var(--orange);
+      color: #fff;
+      font-weight: 700;
+    }
+    .btn-orange:hover { background: #ff8050; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,107,43,0.3); }
+
+    /* ════════════════════════════════════════
+       PAGE 1 — HOME
+    ════════════════════════════════════════ */
+    .hero {
+      min-height: calc(100vh - var(--nav-h));
+      display: flex; align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 70% 40%, rgba(0,200,255,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 20% 80%, rgba(255,107,43,0.07) 0%, transparent 70%);
+    }
+
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .hero-content { position: relative; z-index: 1; }
+
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: block;
+      width: 40px; height: 1px;
+      background: var(--orange);
+    }
+
+    .hero-title {
+      font-size: clamp(3rem, 7vw, 6rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+    }
+    .hero-title .accent { color: var(--cyan); }
+    .hero-title .accent2 { color: var(--orange); }
+
+    .hero-desc {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+      max-width: 520px;
+      margin-bottom: 40px;
+    }
+
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .hero-stats {
+      display: flex; gap: 48px;
+      margin-top: 72px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+    .stat-num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--cyan);
+      line-height: 1;
+    }
+    .stat-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* Features */
+    .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+    .feat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s;
+    }
+    .feat-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .feat-card:hover { border-color: rgba(0,200,255,0.35); transform: translateY(-4px); }
+    .feat-card:hover::before { opacity: 1; }
+    .feat-icon {
+      width: 48px; height: 48px;
+      background: var(--cyan-dim);
+      border: 1px solid rgba(0,200,255,0.25);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+    .feat-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .feat-desc {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* Arbitrum section */
+    .arb-section {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .arb-section::before {
+      content: 'ARB';
+      position: absolute; right: -20px; top: -20px;
+      font-size: 10rem;
+      font-weight: 800;
+      color: rgba(255,107,43,0.04);
+      line-height: 1;
+      pointer-events: none;
+    }
+    .arb-points { display: grid; grid-template-columns: repeat(3,1fr); gap: 32px; margin-top: 40px; }
+    .arb-point { display: flex; gap: 16px; align-items: flex-start; }
+    .arb-num {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--orange);
+      background: var(--orange-dim);
+      border: 1px solid rgba(255,107,43,0.25);
+      padding: 4px 8px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .arb-point-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
+    .arb-point-desc { font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-muted); line-height: 1.7; }
+
+    /* Footer */
+    footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+    }
+    .footer-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-copy { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-link {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .footer-link:hover { color: var(--cyan); }
+
+
+    /* ════════════════════════════════════════
+       PAGE 2 — CONCEPTS
+    ════════════════════════════════════════ */
+    .concept-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .concept-card:hover { transform: translateY(-3px); border-color: rgba(0,200,255,0.35); }
+
+    .concept-header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 0;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+    .concept-side {
+      padding: 18px 24px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .concept-side.left { text-align: left; color: var(--text-muted); }
+    .concept-side.right { text-align: right; color: var(--cyan); }
+    .concept-vs {
+      padding: 10px 16px;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      color: var(--orange);
+      background: var(--orange-dim);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    .concept-rows { padding: 8px 0; }
+    .concept-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: stretch;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .concept-row:last-child { border-bottom: none; }
+    .concept-cell {
+      padding: 14px 24px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+    .concept-cell.left { border-right: 1px solid rgba(255,255,255,0.04); }
+    .concept-cell.right { color: var(--text); }
+    .concept-label {
+      padding: 14px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+      text-align: center;
+      display: flex; align-items: center;
+    }
+
+    /* Key visualization */
+    .key-visual {
+      display: flex; gap: 16px; align-items: stretch;
+    }
+    .key-box {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+    }
+    .key-box.public { border-top: 2px solid var(--cyan); }
+    .key-box.private { border-top: 2px solid var(--orange); }
+    .key-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+    .key-badge.pub { background: var(--cyan-dim); color: var(--cyan); }
+    .key-badge.priv { background: var(--orange-dim); color: var(--orange); }
+    .key-value {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.3);
+      word-break: break-all;
+      margin-bottom: 12px;
+    }
+    .key-desc { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; }
+    .key-uses { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .key-use { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+    .key-use::before { content: '→'; color: var(--cyan); }
+
+
+    /* ════════════════════════════════════════
+       PAGE 3 — LIVE PRICES
+    ════════════════════════════════════════ */
+    .price-header {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+      margin-bottom: 32px;
+    }
+    .price-status {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s infinite;
+    }
+    .dot.loading { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+    .dot.error { background: var(--red); box-shadow: 0 0 8px var(--red); animation: none; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .price-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+
+    .price-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .price-card:hover { transform: translateY(-3px); border-color: rgba(0,200,255,0.35); }
+
+    .price-card-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .coin-info { display: flex; align-items: center; gap: 12px; }
+    .coin-icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+    }
+    .coin-name { font-size: 1rem; font-weight: 700; }
+    .coin-symbol {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+    .change-badge {
+      display: flex; align-items: center; gap: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+    .change-badge.up { background: rgba(0,255,148,0.12); color: var(--green); }
+    .change-badge.down { background: rgba(255,59,92,0.12); color: var(--red); }
+    .change-badge.neutral { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+
+    .price-usd {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 4px;
+    }
+    .price-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .sparkline {
+      margin-top: 20px;
+      height: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .spark-bar {
+      position: absolute;
+      bottom: 0;
+      width: 4px;
+      border-radius: 2px 2px 0 0;
+      opacity: 0.6;
+    }
+
+    .price-footer {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+    }
+    .price-meta { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); }
+    .price-meta span { color: var(--text); }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg3) 25%, var(--bg2) 50%, var(--bg3) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+    .error-box {
+      background: rgba(255,59,92,0.08);
+      border: 1px solid rgba(255,59,92,0.3);
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--red);
+    }
+
+    .last-updated {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 20px;
+      text-align: right;
+    }
+
+    /* ════════════════════════════════════════
+       PAGE 4 — BLOCK SIMULATOR
+    ════════════════════════════════════════ */
+    .simulator-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .block-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .block-card.valid { border-color: rgba(0,255,148,0.4); }
+    .block-card.invalid { border-color: rgba(255,59,92,0.4); animation: shake 0.4s; }
+    .block-card.mining { border-color: rgba(255,200,0,0.4); }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    .block-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+    .block-id {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .block-num {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+    }
+    .block-title { font-size: 0.9rem; font-weight: 700; }
+
+    .block-status {
+      display: flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+    .block-status.valid { background: rgba(0,255,148,0.1); color: var(--green); }
+    .block-status.invalid { background: rgba(255,59,92,0.1); color: var(--red); }
+    .block-status.mining { background: rgba(255,200,0,0.1); color: #ffc800; }
+    .block-status.pending { background: rgba(122,155,189,0.1); color: var(--text-muted); }
+
+    .block-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .field-input {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text);
+      width: 100%;
+      transition: border-color 0.2s;
+      resize: none;
+    }
+    .field-input:focus { outline: none; border-color: rgba(0,200,255,0.4); }
+    .field-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .field-value {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      word-break: break-all;
+      line-height: 1.5;
+      min-height: 42px;
+    }
+    .field-value.highlight { color: var(--cyan); border-color: rgba(0,200,255,0.25); }
+    .field-value.hash-valid { color: var(--green); border-color: rgba(0,255,148,0.25); }
+    .field-value.hash-invalid { color: var(--red); border-color: rgba(255,59,92,0.25); }
+
+    .nonce-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .mine-btn {
+      width: 100%;
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--cyan);
+      color: #000;
+    }
+    .mine-btn:hover { background: #33D4FF; box-shadow: 0 6px 20px rgba(0,200,255,0.3); }
+    .mine-btn:disabled {
+      background: var(--bg3);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .mine-btn.mining-anim {
+      background: #ffc800;
+      color: #000;
+      animation: minePulse 0.5s infinite alternate;
+    }
+    @keyframes minePulse {
+      from { box-shadow: 0 0 10px rgba(255,200,0,0.3); }
+      to { box-shadow: 0 0 24px rgba(255,200,0,0.7); }
+    }
+
+    .chain-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 0;
+    }
+    .chain-line {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      width: 100%;
+    }
+    .chain-node {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+      flex-shrink: 0;
+    }
+    .chain-seg {
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cyan), rgba(0,200,255,0.3));
+    }
+    .chain-seg.broken {
+      background: linear-gradient(90deg, var(--red), rgba(255,59,92,0.3));
+    }
+    .chain-node.broken { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+    .insight-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .insight-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+    .insight-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+    .insight-text { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted); line-height: 1.7; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 0 16px; }
+      .nav-links { gap: 4px; }
+      .nav-link { padding: 6px 10px; font-size: 0.65rem; }
+      .container { padding: 0 16px; }
+      .section { padding: 48px 0; }
+      .features-grid, .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .arb-points { grid-template-columns: 1fr; }
+      .hero-title { font-size: 2.8rem; }
+      .hero-stats { gap: 28px; }
+      .simulator-layout { grid-template-columns: 1fr; }
+      .arb-section { padding: 32px 24px; }
+      .nonce-row { grid-template-columns: 1fr; }
+      .key-visual { flex-direction: column; }
+      .concept-cell { padding: 12px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAVIGATION ═══ -->
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">
+    ⬡ <span>Arbi</span>Learn
+  </div>
+  <div class="nav-links">
+    <button class="nav-link active" id="nav-home" onclick="showPage('home')">Home</button>
+    <button class="nav-link" id="nav-concepts" onclick="showPage('concepts')">Concepts</button>
+    <button class="nav-link" id="nav-prices" onclick="showPage('prices')">Live Prices</button>
+    <button class="nav-link" id="nav-simulator" onclick="showPage('simulator')">Block Sim</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     PAGE 1 — HOME
+═══════════════════════════════════════ -->
+<div class="page active" id="page-home">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="container hero-content">
+      <div class="hero-eyebrow">Arbitrum Builder Labs · LamprosDAO</div>
+      <h1 class="hero-title">
+        Web3 Starts<br>
+        with <span class="accent">Layer</span> <span class="accent2">Two</span>
+      </h1>
+      <p class="hero-desc">
+        A hands-on journey through Arbitrum, Ethereum, blockchain fundamentals, 
+        and live on-chain data. Built for builders who learn by doing.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="showPage('concepts')">Explore Concepts →</button>
+        <button class="btn btn-outline" onclick="showPage('simulator')">Try Block Sim</button>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="stat-num">4</div>
+          <div class="stat-label">Interactive Pages</div>
+        </div>
+        <div>
+          <div class="stat-num">L2</div>
+          <div class="stat-label">Focus: Arbitrum</div>
+        </div>
+        <div>
+          <div class="stat-num">∞</div>
+          <div class="stat-label">Block Simulations</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section">
+    <div class="container">
+      <div class="tag">What's Inside</div>
+      <h2 class="section-title">Everything in One Place</h2>
+      <p class="section-sub" style="margin-bottom:40px;">
+        From concepts to live data to interactive simulations — this site covers 
+        the essentials every Web3 builder needs to understand.
+      </p>
+      <div class="features-grid">
+        <div class="feat-card">
+          <div class="feat-icon">📚</div>
+          <div class="feat-title">Visual Concepts</div>
+          <div class="feat-desc">Side-by-side comparison cards covering Web2 vs Web3, Ethereum vs Bitcoin, keys, and databases — no textbook walls.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">📈</div>
+          <div class="feat-title">Live Crypto Prices</div>
+          <div class="feat-desc">Real-time ETH, BTC, SOL, and more — fetched directly from CoinGecko API with 24h change indicators.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">⛏️</div>
+          <div class="feat-title">Block Simulator</div>
+          <div class="feat-desc">Mine blocks with proof-of-work, tweak data, and watch the chain break. Immutability made tangible in your browser.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">⚡</div>
+          <div class="feat-title">Layer 2 Explained</div>
+          <div class="feat-desc">Why Ethereum needed scaling, how Arbitrum solves it, and real-world cost savings — all in plain language.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🔐</div>
+          <div class="feat-title">SHA-256 Hashing</div>
+          <div class="feat-desc">Runs the same cryptographic hash function used in real blockchains, powered by the Web Crypto API.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🌐</div>
+          <div class="feat-title">Fully Responsive</div>
+          <div class="feat-desc">Works on mobile, tablet, and desktop. Built with HTML, CSS, and vanilla JavaScript — no install needed.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARBITRUM SECTION -->
+  <section class="section" style="padding-top:0;">
+    <div class="container">
+      <div class="arb-section">
+        <div class="tag" style="background:var(--orange-dim);color:var(--orange);border-color:rgba(255,107,43,0.25);">Layer 2 Deep Dive</div>
+        <h2 class="section-title">Why Arbitrum?</h2>
+        <div class="arb-points">
+          <div class="arb-point">
+            <span class="arb-num">01</span>
+            <div>
+              <div class="arb-point-title">Ethereum Needed Scaling</div>
+              <div class="arb-point-desc">As Ethereum grew, gas fees skyrocketed and transactions slowed during peak demand. Simple swaps cost $50–$200 in fees, pricing out regular users.</div>
+            </div>
+          </div>
+          <div class="arb-point">
+            <span class="arb-num">02</span>
+            <div>
+              <div class="arb-point-title">Arbitrum is the Solution</div>
+              <div class="arb-point-desc">Arbitrum is an Optimistic Rollup that bundles thousands of transactions off-chain, posts compressed proofs to Ethereum, and inherits its security.</div>
+            </div>
+          </div>
+          <div class="arb-point">
+            <span class="arb-num">03</span>
+            <div>
+              <div class="arb-point-title">Real-World Benefit</div>
+              <div class="arb-point-desc">A token swap that costs $80 on Ethereum mainnet costs under $0.50 on Arbitrum — same security, 100× lower fees. That's why DeFi is migrating to L2.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-copy">
+          Built for Arbitrum Builder Labs · LamprosDAO · Batch 2025
+        </div>
+        <div class="footer-links">
+          <a class="footer-link" href="https://github.com" target="_blank">GitHub ↗</a>
+          <span class="footer-link" onclick="showPage('concepts')">Concepts</span>
+          <span class="footer-link" onclick="showPage('prices')">Prices</span>
+          <span class="footer-link" onclick="showPage('simulator')">Simulator</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE 2 — CONCEPTS
+═══════════════════════════════════════ -->
+<div class="page" id="page-concepts">
+  <section class="section">
+    <div class="container">
+      <div class="tag">Core Knowledge</div>
+      <h2 class="section-title">Web3 Concepts</h2>
+      <p class="section-sub" style="margin-bottom:56px;">
+        The fundamentals explained side-by-side. 
+        No jargon. No fluff. Just clarity.
+      </p>
+
+      <!-- WEB2 vs WEB3 -->
+      <div class="concept-card" style="margin-bottom:24px;">
+        <div class="concept-header">
+          <div class="concept-side left">🌐 Web2</div>
+          <div class="concept-vs">VS</div>
+          <div class="concept-side right">⛓️ Web3</div>
+        </div>
+        <div class="concept-rows">
+          <div class="concept-row">
+            <div class="concept-cell left">Companies own your data (Google, Meta)</div>
+            <div class="concept-label">Ownership</div>
+            <div class="concept-cell right">You own your data via wallets and keys</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">Central servers — one point of failure</div>
+            <div class="concept-label">Architecture</div>
+            <div class="concept-cell right">Distributed nodes — no single failure</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">You need a bank, PayPal, or Stripe</div>
+            <div class="concept-label">Payments</div>
+            <div class="concept-cell right">Send value peer-to-peer, no middleman</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">Rules set by platforms — can change anytime</div>
+            <div class="concept-label">Trust</div>
+            <div class="concept-cell right">Rules enforced by code (smart contracts)</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">Your account can be deleted or banned</div>
+            <div class="concept-label">Censorship</div>
+            <div class="concept-cell right">Permissionless — no one can stop you</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ETH vs BTC -->
+      <div class="concept-card" style="margin-bottom:24px;">
+        <div class="concept-header">
+          <div class="concept-side left">🔷 Ethereum</div>
+          <div class="concept-vs">VS</div>
+          <div class="concept-side right">🟠 Bitcoin</div>
+        </div>
+        <div class="concept-rows">
+          <div class="concept-row">
+            <div class="concept-cell left">Programmable blockchain (smart contracts)</div>
+            <div class="concept-label">Purpose</div>
+            <div class="concept-cell right">Digital gold — store of value</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">Proof of Stake (PoS) since The Merge</div>
+            <div class="concept-label">Consensus</div>
+            <div class="concept-cell right">Proof of Work (PoW) — miners required</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">~12 seconds per block</div>
+            <div class="concept-label">Block Time</div>
+            <div class="concept-cell right">~10 minutes per block</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">No hard cap (but deflationary via EIP-1559)</div>
+            <div class="concept-label">Supply</div>
+            <div class="concept-cell right">Fixed cap of 21 million BTC</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">DeFi, NFTs, DAOs, dApps</div>
+            <div class="concept-label">Use Cases</div>
+            <div class="concept-cell right">Savings, cross-border payments, HODLing</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blockchain vs Traditional DB -->
+      <div class="concept-card" style="margin-bottom:40px;">
+        <div class="concept-header">
+          <div class="concept-side left">⛓️ Blockchain</div>
+          <div class="concept-vs">VS</div>
+          <div class="concept-side right">🗄️ Traditional DB</div>
+        </div>
+        <div class="concept-rows">
+          <div class="concept-row">
+            <div class="concept-cell left">Append-only — data can never be changed</div>
+            <div class="concept-label">Mutability</div>
+            <div class="concept-cell right">CRUD — create, read, update, delete freely</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">Replicated across thousands of nodes</div>
+            <div class="concept-label">Storage</div>
+            <div class="concept-cell right">Stored on a company's server</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">Trustless — math, not people, enforces rules</div>
+            <div class="concept-label">Trust</div>
+            <div class="concept-cell right">You must trust the company running it</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">Slow (~12 sec to confirm) and expensive</div>
+            <div class="concept-label">Speed/Cost</div>
+            <div class="concept-cell right">Fast (milliseconds) and cheap</div>
+          </div>
+          <div class="concept-row">
+            <div class="concept-cell left">Anyone can read public blockchains</div>
+            <div class="concept-label">Transparency</div>
+            <div class="concept-cell right">Private — only admins can see everything</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PUBLIC KEY vs PRIVATE KEY -->
+      <div class="tag">Cryptography</div>
+      <h3 class="section-title" style="font-size:1.6rem;margin-bottom:24px;">Public Key vs Private Key</h3>
+      <div class="key-visual">
+        <div class="key-box public">
+          <div class="key-badge pub">🔓 Public Key</div>
+          <div class="key-value">0x742d35Cc6634C0532925a3b8D4C9E8a3b2d1F7c2...</div>
+          <div class="key-desc">Your public address — safe to share with anyone. It's like your bank account number. People send funds <em>to</em> this address.</div>
+          <div class="key-uses">
+            <div class="key-use">Receive cryptocurrency</div>
+            <div class="key-use">Verify your digital signature</div>
+            <div class="key-use">Share publicly without risk</div>
+            <div class="key-use">Derived from the private key (one-way)</div>
+          </div>
+        </div>
+        <div class="key-box private">
+          <div class="key-badge priv">🔐 Private Key</div>
+          <div class="key-value">5KJvsngHeMpm884wtkJNzQGaCErckhHJBGFsvd3VyK5yLs7Kfw...</div>
+          <div class="key-desc">Your secret key — never share it. It's like your PIN + signature. Anyone who has this owns your funds. There is no recovery if lost.</div>
+          <div class="key-uses">
+            <div class="key-use" style="--cyan:var(--orange);">Sign transactions to send funds</div>
+            <div class="key-use" style="--cyan:var(--orange);">Prove ownership of your wallet</div>
+            <div class="key-use" style="--cyan:var(--orange);">Never stored on a server — only you</div>
+            <div class="key-use" style="--cyan:var(--orange);">256-bit random number mathematically unique</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-copy">ArbiLearn · Arbitrum Builder Labs · LamprosDAO · 2025</div>
+        <div class="footer-links">
+          <a class="footer-link" href="https://github.com" target="_blank">GitHub ↗</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE 3 — LIVE PRICES
+═══════════════════════════════════════ -->
+<div class="page" id="page-prices">
+  <section class="section">
+    <div class="container">
+      <div class="price-header">
+        <div>
+          <div class="tag">CoinGecko API</div>
+          <h2 class="section-title">Live Crypto Prices</h2>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px;">
+          <div class="price-status">
+            <div class="dot" id="price-dot"></div>
+            <span id="price-status-text">Fetching data...</span>
+          </div>
+          <button class="btn btn-outline" onclick="fetchPrices()">⟳ Refresh</button>
+        </div>
+      </div>
+
+      <div class="price-grid" id="price-grid">
+        <!-- skeleton cards -->
+        <div class="price-card">
+          <div style="height:180px;" class="skeleton"></div>
+        </div>
+        <div class="price-card">
+          <div style="height:180px;" class="skeleton"></div>
+        </div>
+        <div class="price-card">
+          <div style="height:180px;" class="skeleton"></div>
+        </div>
+        <div class="price-card">
+          <div style="height:180px;" class="skeleton"></div>
+        </div>
+      </div>
+      <div class="last-updated" id="last-updated"></div>
+    </div>
+  </section>
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-copy">ArbiLearn · Data by CoinGecko (free tier, no API key required)</div>
+        <div class="footer-links">
+          <a class="footer-link" href="https://github.com" target="_blank">GitHub ↗</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE 4 — BLOCK SIMULATOR
+═══════════════════════════════════════ -->
+<div class="page" id="page-simulator">
+  <section class="section">
+    <div class="container">
+      <div class="tag">Proof of Work</div>
+      <h2 class="section-title">Block Mining Simulator</h2>
+      <p class="section-sub" style="margin-bottom:40px;">
+        Type data, hit Mine, and watch proof-of-work in action. 
+        Then change Block 1 and see the chain break.
+      </p>
+
+      <div class="simulator-layout">
+        <!-- BLOCK 1 -->
+        <div class="block-card" id="block1-card">
+          <div class="block-header">
+            <div class="block-id">
+              <span class="block-num">BLOCK</span>
+              <span class="block-title">#1 — Genesis</span>
+            </div>
+            <div class="block-status pending" id="b1-status">⬤ Pending</div>
+          </div>
+          <div class="block-body">
+            <div class="field-group">
+              <div class="field-label">Block Data</div>
+              <textarea class="field-input" id="b1-data" rows="2" placeholder="e.g. Alice sends 5 ETH to Bob" oninput="onBlock1Change()">Alice sends 5 ETH to Bob</textarea>
+            </div>
+            <div class="nonce-row">
+              <div class="field-group">
+                <div class="field-label">Previous Hash</div>
+                <div class="field-value">0000000000000000 (genesis)</div>
+              </div>
+              <div class="field-group">
+                <div class="field-label">Nonce</div>
+                <div class="field-value" id="b1-nonce">—</div>
+              </div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Hash Output (SHA-256)</div>
+              <div class="field-value" id="b1-hash">Click "Mine" to compute</div>
+            </div>
+            <button class="mine-btn" id="b1-btn" onclick="mineBlock(1)">⛏ Mine Block #1</button>
+          </div>
+        </div>
+
+        <!-- BLOCK 2 -->
+        <div class="block-card" id="block2-card">
+          <div class="block-header">
+            <div class="block-id">
+              <span class="block-num">BLOCK</span>
+              <span class="block-title">#2 — Next</span>
+            </div>
+            <div class="block-status pending" id="b2-status">⬤ Pending</div>
+          </div>
+          <div class="block-body">
+            <div class="field-group">
+              <div class="field-label">Block Data</div>
+              <textarea class="field-input" id="b2-data" rows="2" placeholder="e.g. Bob sends 2 ETH to Carol" oninput="onBlock2Change()">Bob sends 2 ETH to Carol</textarea>
+            </div>
+            <div class="nonce-row">
+              <div class="field-group">
+                <div class="field-label">Previous Hash (from Block 1)</div>
+                <div class="field-value highlight" id="b2-prevhash">Mine Block #1 first</div>
+              </div>
+              <div class="field-group">
+                <div class="field-label">Nonce</div>
+                <div class="field-value" id="b2-nonce">—</div>
+              </div>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Hash Output (SHA-256)</div>
+              <div class="field-value" id="b2-hash">Mine Block #1 first</div>
+            </div>
+            <button class="mine-btn" id="b2-btn" onclick="mineBlock(2)" disabled>⛏ Mine Block #2</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chain visualization -->
+      <div class="chain-arrow">
+        <div class="chain-line" id="chain-line">
+          <div class="chain-node" id="chain-n1"></div>
+          <div class="chain-seg" id="chain-s1"></div>
+          <div class="chain-node" id="chain-n2"></div>
+          <div class="chain-seg" id="chain-s2"></div>
+          <div class="chain-node" id="chain-n3"></div>
+        </div>
+      </div>
+
+      <!-- Reset -->
+      <div style="text-align:center;margin-bottom:40px;">
+        <button class="btn btn-outline" onclick="resetSimulator()">↺ Reset Simulator</button>
+      </div>
+
+      <!-- Insight boxes -->
+      <div class="grid-2">
+        <div class="insight-box">
+          <div class="insight-icon">⛏️</div>
+          <div>
+            <div class="insight-title">What is a Nonce?</div>
+            <div class="insight-text">A nonce ("number used once") is a counter miners increment until the SHA-256 hash of the block starts with "00". This is proof-of-work — it proves computation was done, making blocks expensive to fake.</div>
+          </div>
+        </div>
+        <div class="insight-box">
+          <div class="insight-icon">🔗</div>
+          <div>
+            <div class="insight-title">Why Does the Chain Break?</div>
+            <div class="insight-text">Each block contains the previous block's hash. Change Block 1's data → its hash changes → Block 2's "previous hash" no longer matches → Block 2 becomes invalid. This is immutability in action.</div>
+          </div>
+        </div>
+        <div class="insight-box">
+          <div class="insight-icon">🔐</div>
+          <div>
+            <div class="insight-title">SHA-256 is One-Way</div>
+            <div class="insight-text">You cannot reverse a SHA-256 hash to find the original data. The only way to find a valid nonce is brute force — trying billions of combinations. Bitcoin miners do this trillions of times per second.</div>
+          </div>
+        </div>
+        <div class="insight-box">
+          <div class="insight-icon">⚡</div>
+          <div>
+            <div class="insight-title">Real vs This Simulator</div>
+            <div class="insight-text">Bitcoin requires hashes starting with 19+ zeros (1 in 10²³ chance). This simulator uses "00" (1 in 65,536) so your browser can mine in seconds. The logic is identical — only the difficulty differs.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-copy">ArbiLearn · Hashing powered by Web Crypto API (SHA-256)</div>
+        <div class="footer-links">
+          <a class="footer-link" href="https://github.com" target="_blank">GitHub ↗</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════════
+const pages = ['home','concepts','prices','simulator'];
+
+function showPage(id) {
+  pages.forEach(p => {
+    document.getElementById('page-'+p).classList.remove('active');
+    document.getElementById('nav-'+p).classList.remove('active');
+  });
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (id === 'prices') fetchPrices();
+}
+
+// ═══════════════════════════════════════════
+// PAGE 3 — LIVE PRICES
+// ═══════════════════════════════════════════
+const COINS = [
+  { id: 'bitcoin',  name: 'Bitcoin',  symbol: 'BTC', icon: '🟠', color: '#F7931A' },
+  { id: 'ethereum', name: 'Ethereum', symbol: 'ETH', icon: '🔷', color: '#627EEA' },
+  { id: 'solana',   name: 'Solana',   symbol: 'SOL', icon: '🟣', color: '#9945FF' },
+  { id: 'matic-network', name: 'Polygon', symbol: 'MATIC', icon: '🔵', color: '#8247E5' },
+];
+
+function setDot(state) {
+  const dot = document.getElementById('price-dot');
+  const txt = document.getElementById('price-status-text');
+  dot.className = 'dot ' + (state === 'ok' ? '' : state);
+  txt.textContent = state === 'ok' ? 'Live' : state === 'loading' ? 'Fetching...' : 'Error — Using cached data';
+}
+
+function makeSparkline(color, positive) {
+  const bars = 16;
+  const heights = Array.from({length: bars}, (_,i) => {
+    const base = 30 + Math.random() * 50;
+    return base + (positive ? i * 1.2 : -i * 1.2) + (Math.random()-0.5)*20;
+  });
+  const min = Math.min(...heights), max = Math.max(...heights);
+  let html = '';
+  heights.forEach((h, i) => {
+    const pct = ((h - min) / (max - min)) * 80 + 10;
+    const left = (i / bars) * 100;
+    html += `<div class="spark-bar" style="left:${left}%;height:${pct}%;background:${color};width:calc(${100/bars}% - 2px);"></div>`;
+  });
+  return `<div class="sparkline" style="position:relative;">${html}</div>`;
+}
+
+async function fetchPrices() {
+  setDot('loading');
+  const ids = COINS.map(c=>c.id).join(',');
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`;
+  const grid = document.getElementById('price-grid');
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    setDot('ok');
+
+    grid.innerHTML = COINS.map(coin => {
+      const d = data[coin.id];
+      if (!d) return '';
+      const price = d.usd;
+      const chg = d.usd_24h_change;
+      const chgStr = chg !== null && chg !== undefined ? (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%' : 'N/A';
+      const chgClass = chg > 0 ? 'up' : chg < 0 ? 'down' : 'neutral';
+      const arrow = chg > 0 ? '▲' : chg < 0 ? '▼' : '—';
+      const fmtPrice = price >= 1000
+        ? '$' + price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})
+        : '$' + price.toFixed(4);
+
+      return `
+      <div class="price-card">
+        <div class="price-card-top">
+          <div class="coin-info">
+            <div class="coin-icon">${coin.icon}</div>
+            <div>
+              <div class="coin-name">${coin.name}</div>
+              <div class="coin-symbol">${coin.symbol}</div>
+            </div>
+          </div>
+          <div class="change-badge ${chgClass}">${arrow} ${chgStr}</div>
+        </div>
+        <div class="price-usd">${fmtPrice}</div>
+        <div class="price-label">USD · Current Price</div>
+        ${makeSparkline(coin.color, chg > 0)}
+        <div class="price-footer">
+          <div class="price-meta">24h Change <span style="color:${chg>=0?'var(--green)':'var(--red)'}">${chgStr}</span></div>
+          <div class="price-meta">via <span>CoinGecko</span></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('last-updated').textContent =
+      'Last updated: ' + new Date().toLocaleTimeString();
+
+  } catch(e) {
+    setDot('error');
+    // fallback mock data
+    grid.innerHTML = `<div class="error-box" style="grid-column:1/-1;">
+      ⚠ Could not reach CoinGecko API (CORS/network). Showing example data.<br><br>
+      <small>In a real deployment with a backend proxy or same-origin setup, this would show live prices.</small>
+    </div>` + COINS.map(coin => {
+      const mockPrice = {bitcoin:67432.12, ethereum:3521.88, solana:148.55, 'matic-network':0.9134}[coin.id];
+      const mockChg = {bitcoin:2.3, ethereum:-1.1, solana:5.4, 'matic-network':-0.8}[coin.id];
+      const chgStr = (mockChg>=0?'+':'') + mockChg.toFixed(2)+'%';
+      const chgClass = mockChg>0?'up':'down';
+      const arrow = mockChg>0?'▲':'▼';
+      return `<div class="price-card">
+        <div class="price-card-top">
+          <div class="coin-info">
+            <div class="coin-icon">${coin.icon}</div>
+            <div><div class="coin-name">${coin.name}</div><div class="coin-symbol">${coin.symbol} · EXAMPLE</div></div>
+          </div>
+          <div class="change-badge ${chgClass}">${arrow} ${chgStr}</div>
+        </div>
+        <div class="price-usd">$${mockPrice.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+        <div class="price-label">USD · Example (not live)</div>
+        ${makeSparkline(coin.color, mockChg>0)}
+      </div>`;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════
+// PAGE 4 — BLOCK SIMULATOR
+// ═══════════════════════════════════════════
+let block1Hash = null;
+let block1Mined = false;
+let block2Mined = false;
+
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function mineBlock(blockNum) {
+  const btn = document.getElementById('b'+blockNum+'-btn');
+  const statusEl = document.getElementById('b'+blockNum+'-status');
+  const hashEl = document.getElementById('b'+blockNum+'-hash');
+  const nonceEl = document.getElementById('b'+blockNum+'-nonce');
+  const card = document.getElementById('block'+blockNum+'-card');
+
+  const data = document.getElementById('b'+blockNum+'-data').value;
+  const prevHash = blockNum === 1
+    ? '0000000000000000'
+    : (block1Hash || '');
+
+  if (blockNum === 2 && !block1Hash) return;
+
+  // Start mining
+  btn.textContent = '⛏ Mining…';
+  btn.disabled = true;
+  btn.classList.add('mining-anim');
+  card.className = 'block-card mining';
+  statusEl.className = 'block-status mining';
+  statusEl.textContent = '⬤ Mining…';
+
+  let nonce = 0;
+  let hash = '';
+
+  // Async mining loop — yields every 100 iters to keep UI responsive
+  while (true) {
+    for (let i = 0; i < 100; i++) {
+      const input = `${data}${prevHash}${nonce}`;
+      hash = await sha256(input);
+      hashEl.textContent = hash;
+      nonceEl.textContent = nonce;
+      if (hash.startsWith('00')) break;
+      nonce++;
+    }
+    if (hash.startsWith('00')) break;
+    await new Promise(r => setTimeout(r, 0));
+  }
+
+  // Found!
+  btn.classList.remove('mining-anim');
+  btn.textContent = '✓ Block Mined!';
+  btn.style.background = 'var(--green)';
+
+  card.className = 'block-card valid';
+  statusEl.className = 'block-status valid';
+  statusEl.textContent = '✓ Valid';
+  hashEl.className = 'field-value hash-valid';
+  hashEl.textContent = hash;
+  nonceEl.textContent = nonce;
+
+  if (blockNum === 1) {
+    block1Hash = hash;
+    block1Mined = true;
+    // Feed into block 2
+    document.getElementById('b2-prevhash').textContent = hash;
+    document.getElementById('b2-prevhash').className = 'field-value hash-valid';
+    document.getElementById('b2-btn').disabled = false;
+    document.getElementById('b2-hash').textContent = 'Now mine Block #2';
+    updateChain();
+  } else {
+    block2Mined = true;
+    updateChain();
+  }
+}
+
+function onBlock1Change() {
+  if (!block1Mined) return;
+  // Invalidate
+  block1Mined = false;
+  block1Hash = null;
+  block2Mined = false;
+
+  const b1card = document.getElementById('block1-card');
+  const b2card = document.getElementById('block2-card');
+  b1card.className = 'block-card invalid';
+  b2card.className = 'block-card invalid';
+
+  document.getElementById('b1-status').className = 'block-status invalid';
+  document.getElementById('b1-status').textContent = '⚠ Invalid — Re-mine';
+  document.getElementById('b2-status').className = 'block-status invalid';
+  document.getElementById('b2-status').textContent = '⚠ Invalid — Chain Broken';
+
+  document.getElementById('b1-hash').className = 'field-value hash-invalid';
+  document.getElementById('b1-hash').textContent = '⚠ Hash changed — re-mine required';
+  document.getElementById('b2-prevhash').className = 'field-value hash-invalid';
+  document.getElementById('b2-prevhash').textContent = '⚠ Block 1 hash changed — chain broken!';
+  document.getElementById('b2-hash').className = 'field-value hash-invalid';
+  document.getElementById('b2-hash').textContent = '⚠ Previous hash mismatch';
+
+  const b1btn = document.getElementById('b1-btn');
+  b1btn.textContent = '⛏ Re-Mine Block #1';
+  b1btn.style.background = '';
+  b1btn.disabled = false;
+  b1btn.classList.remove('mining-anim');
+
+  const b2btn = document.getElementById('b2-btn');
+  b2btn.textContent = '⛏ Mine Block #2';
+  b2btn.style.background = '';
+  b2btn.disabled = true;
+
+  updateChain(true);
+}
+
+function onBlock2Change() {
+  if (!block2Mined || !block1Hash) return;
+  block2Mined = false;
+  document.getElementById('block2-card').className = 'block-card invalid';
+  document.getElementById('b2-status').className = 'block-status invalid';
+  document.getElementById('b2-status').textContent = '⚠ Invalid — Re-mine';
+  document.getElementById('b2-hash').className = 'field-value hash-invalid';
+  document.getElementById('b2-hash').textContent = '⚠ Data changed — re-mine required';
+  const b2btn = document.getElementById('b2-btn');
+  b2btn.textContent = '⛏ Re-Mine Block #2';
+  b2btn.style.background = '';
+  b2btn.disabled = false;
+  updateChain();
+}
+
+function updateChain(broken) {
+  const n1 = document.getElementById('chain-n1');
+  const s1 = document.getElementById('chain-s1');
+  const n2 = document.getElementById('chain-n2');
+  const s2 = document.getElementById('chain-s2');
+  const n3 = document.getElementById('chain-n3');
+
+  if (broken) {
+    n1.className = 'chain-node broken';
+    s1.className = 'chain-seg broken';
+    n2.className = 'chain-node broken';
+    s2.className = 'chain-seg broken';
+    n3.className = 'chain-node broken';
+  } else if (block2Mined) {
+    n1.className = 'chain-node'; s1.className = 'chain-seg';
+    n2.className = 'chain-node'; s2.className = 'chain-seg';
+    n3.className = 'chain-node';
+  } else if (block1Mined) {
+    n1.className = 'chain-node'; s1.className = 'chain-seg';
+    n2.className = 'chain-node';
+    s2.className = 'chain-seg broken'; n3.className = 'chain-node broken';
+  }
+}
+
+function resetSimulator() {
+  block1Hash = null; block1Mined = false; block2Mined = false;
+
+  ['b1','b2'].forEach(b => {
+    document.getElementById(b+'-status').className = 'block-status pending';
+    document.getElementById(b+'-status').textContent = '⬤ Pending';
+    document.getElementById(b+'-hash').className = 'field-value';
+    document.getElementById(b+'-hash').textContent = b==='b1' ? 'Click "Mine" to compute' : 'Mine Block #1 first';
+    document.getElementById(b+'-nonce').textContent = '—';
+    document.getElementById('block'+b.replace('b','')+'-card').className = 'block-card';
+  });
+
+  document.getElementById('b1-data').value = 'Alice sends 5 ETH to Bob';
+  document.getElementById('b2-data').value = 'Bob sends 2 ETH to Carol';
+  document.getElementById('b2-prevhash').className = 'field-value';
+  document.getElementById('b2-prevhash').textContent = 'Mine Block #1 first';
+
+  const b1btn = document.getElementById('b1-btn');
+  b1btn.textContent = '⛏ Mine Block #1'; b1btn.style.background=''; b1btn.disabled=false;
+  const b2btn = document.getElementById('b2-btn');
+  b2btn.textContent = '⛏ Mine Block #2'; b2btn.style.background=''; b2btn.disabled=true;
+
+  ['chain-n1','chain-n2','chain-n3'].forEach(id => {
+    document.getElementById(id).className = 'chain-node';
+  });
+  ['chain-s1','chain-s2'].forEach(id => {
+    document.getElementById(id).className = 'chain-seg';
+  });
+}
+</script>
+</body>
+</html>
